@@ -1,0 +1,301 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Orbit Station | Premium AI Intelligence</title>
+    <link rel="stylesheet" href="/index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.sh/@google/genai@^0.8.0",
+          "marked": "https://esm.sh/marked@^4.0.0",
+          "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.39.0"
+        }
+      }
+    </script>
+  </head>
+  <body class="dark-mode">
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+      <div class="orbit-logo-container">
+        <div class="orbit-ring"></div>
+        <div class="orbit-core"></div>
+      </div>
+      <h1 class="splash-title">ORBIT STATION</h1>
+      <p class="splash-subtitle">Powered by Orbit AI Intelligence</p>
+    </div>
+
+    <!-- Auth Overlay -->
+    <div id="authOverlay" class="auth-overlay hidden">
+      <div class="auth-card">
+        <div class="auth-logo"><i class="fas fa-satellite"></i></div>
+        <h2>Station Access</h2>
+        <p>Authenticate with your Orbit ID</p>
+        <div class="auth-inputs">
+          <input type="email" id="authEmail" placeholder="Orbit ID (Email)">
+          <input type="password" id="authPassword" placeholder="Access Key">
+        </div>
+        <button id="authBtn" class="auth-submit">Initialize Connection</button>
+        <p class="auth-footer">Secured by Gemini Enterprise Sync</p>
+      </div>
+    </div>
+
+    <div class="app-shell hidden" id="appShell">
+      <!-- Main Content Area -->
+      <div class="content-container">
+        
+        <!-- Tab: Dashboard (Home) -->
+        <section id="dashboardView" class="view active">
+          <header class="app-header">
+            <div class="header-left">
+              <p class="greeting-sub">Station Dashboard</p>
+              <h1>Orbit AI</h1>
+            </div>
+            <div class="header-right">
+              <div id="userInitials" class="avatar-small clickable" style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;cursor:pointer;">..</div>
+            </div>
+          </header>
+
+          <div class="dash-grid">
+            <div class="dash-card premium-card clickable" data-action="start-translation">
+              <div class="card-icon"><i class="fas fa-language"></i></div>
+              <h3>Live Translation</h3>
+              <p>Real-time multi-speaker sync room</p>
+            </div>
+            <div class="dash-card premium-card clickable" data-action="join-call">
+              <div class="card-icon"><i class="fas fa-video"></i></div>
+              <h3>Join Video Sync</h3>
+              <p>Connect with global AI arbiters</p>
+            </div>
+            <div class="dash-card premium-card clickable" data-action="open-settings">
+              <div class="card-icon"><i class="fas fa-sliders-h"></i></div>
+              <h3>Intelligence Config</h3>
+              <p>Language and model fine-tuning</p>
+            </div>
+          </div>
+
+          <div class="status-panel glass-element">
+            <div class="status-item">
+              <span class="status-dot online"></span>
+              <span class="status-label">Global Node Status: Optimal</span>
+            </div>
+            <div class="status-item">
+              <i class="fas fa-microchip"></i>
+              <span class="status-label" id="activeModelLabel">Model: Gemini 2.5 Flash</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Syncs (Archives) -->
+        <section id="chatsView" class="view">
+          <header class="app-header">
+            <h1>Sync Archives</h1>
+          </header>
+          
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search decrypted logs">
+          </div>
+
+          <div class="chat-list" id="chatList">
+            <div class="chat-item" data-room="Global Hub">
+              <div class="avatar-main" style="background: linear-gradient(135deg, #007AFF, #00C7FF);"><i class="fas fa-globe-americas"></i></div>
+              <div class="chat-info">
+                <div class="chat-top">
+                  <span class="chat-name">Arbiter Core</span>
+                  <span class="chat-time">Live</span>
+                </div>
+                <span class="last-msg">Active sync stream established...</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Arbiters (Nodes) -->
+        <section id="peopleView" class="view">
+          <header class="app-header">
+            <h1>Active Nodes</h1>
+            <button id="initGroupCallBtn" class="premium-call-btn hidden">
+              <i class="fas fa-users"></i>
+            </button>
+          </header>
+          <div class="search-bar">
+            <i class="fas fa-user-plus"></i>
+            <input type="text" placeholder="Filter active nodes">
+          </div>
+          <div class="chat-list" id="peopleList">
+            <!-- Dynamic Arbiters -->
+          </div>
+        </section>
+
+        <!-- Tab: Settings/Profile -->
+        <section id="settingsView" class="view">
+          <header class="app-header"><h1>Intelligence Config</h1></header>
+          
+          <div class="profile-card-large glass-element">
+             <div class="avatar-edit-wrapper">
+                <div id="profileAvatarLarge" class="avatar-main">JS</div>
+                <div class="avatar-edit-badge"><i class="fas fa-camera"></i></div>
+             </div>
+             <h2 id="profileDisplayName">Arbiter Node</h2>
+             <p id="profileEmailLabel">email@example.com</p>
+             <div id="profileStatusBadge">Online</div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Identity Settings</h3>
+            <div class="settings-list">
+              <div class="settings-item-col">
+                <span>Display Name</span>
+                <input type="text" id="displayNameInput" placeholder="Enter name">
+              </div>
+              <div class="settings-item-col">
+                <span>Arbiter Status</span>
+                <input type="text" id="statusInput" placeholder="Status description">
+              </div>
+              <div class="settings-item" id="saveProfileBtn">
+                <span>Synchronize Profile</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Orbit AI Core</h3>
+            <div class="settings-list">
+              <div class="settings-item-col">
+                <span>Active LLM Model</span>
+                <select id="llmModelSelect" class="premium-select">
+                  <option value="gemini-2.5-flash-native-audio-preview-12-2025">Gemini 2.5 Flash (Sync Optimized)</option>
+                  <option value="gemini-3-pro-preview">Gemini 3 Pro (Reasoning Enhanced)</option>
+                  <option value="gemini-3-flash-preview">Gemini 3 Flash (Real-time Low Latency)</option>
+                </select>
+              </div>
+              <div class="settings-item">
+                <div class="settings-icon"><i class="fas fa-microchip"></i></div>
+                <span style="flex:1; font-weight:600;">Real-time Transcription</span>
+                <label class="switch">
+                  <input type="checkbox" id="translationToggle">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="settings-item-col">
+                <span>Target Language Node</span>
+                <select id="targetLangSelect" class="premium-select">
+                  <option value="English">English (US)</option>
+                  <option value="Spanish">Spanish (ES)</option>
+                  <option value="French">French (FR)</option>
+                  <option value="German">German (DE)</option>
+                  <option value="Chinese">Chinese (CN)</option>
+                  <option value="Japanese">Japanese (JP)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Visual Interface</h3>
+            <div class="settings-list">
+              <div class="settings-item-col">
+                <span>Station Accent Color</span>
+                <div class="color-picker" id="colorPicker">
+                  <div class="color-swatch active" style="background:#007AFF" data-color="#007AFF"></div>
+                  <div class="color-swatch" style="background:#FF2D55" data-color="#FF2D55"></div>
+                  <div class="color-swatch" style="background:#AF52DE" data-color="#AF52DE"></div>
+                  <div class="color-swatch" style="background:#34C759" data-color="#34C759"></div>
+                </div>
+              </div>
+              <div class="settings-item" id="logoutBtn" style="color:var(--danger)">
+                <div class="settings-icon" style="background:rgba(255,59,48,0.1); color:var(--danger)"><i class="fas fa-power-off"></i></div>
+                <span style="font-weight:700;">Disconnect Station</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Chat Detail Overlay -->
+        <div id="chatDetail" class="chat-detail-pane hidden">
+          <header class="messenger-header glass-element">
+            <button id="backToChats">
+              <i class="fas fa-chevron-left"></i>
+              <span>Back</span>
+            </button>
+            <div class="active-chat-info">
+              <h2 id="roomTitle">Sync Hub</h2>
+              <span id="roomStatus">● Active Connection</span>
+            </div>
+            <button id="startCallBtn" class="premium-call-btn">
+              <i class="fas fa-video"></i>
+            </button>
+          </header>
+
+          <div class="message-container" id="messageContainer"></div>
+
+          <footer class="message-input-area glass-element">
+            <div class="input-wrapper">
+              <input type="text" id="msgInput" placeholder="Transmit secure packets..." autocomplete="off">
+              <button id="seamlessTranscriptionBtn" class="icon-btn-mic">
+                <i class="fas fa-microphone"></i>
+              </button>
+              <button id="sendMsgBtn" class="premium-call-btn" style="width:36px; height:36px; font-size:14px;">
+                <i class="fas fa-arrow-up"></i>
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <!-- Bottom Navigation Bar -->
+      <nav class="bottom-nav">
+        <button class="nav-item active" data-view="dashboardView">
+          <i class="fas fa-th-large"></i>
+          <span>Home</span>
+        </button>
+        <button class="nav-item" data-view="chatsView">
+          <i class="fas fa-vault"></i>
+          <span>Archives</span>
+        </button>
+        <button class="nav-item" data-view="peopleView">
+          <i class="fas fa-user-group"></i>
+          <span>Nodes</span>
+        </button>
+        <button class="nav-item" data-view="settingsView">
+          <i class="fas fa-user-circle"></i>
+          <span>Profile</span>
+        </button>
+      </nav>
+
+      <!-- Video Call Overlay -->
+      <div id="callOverlay" class="call-overlay hidden">
+        <div class="call-header glass-element">
+          <span id="callParticipants">Connecting Nodes...</span>
+        </div>
+        
+        <div class="video-grid" id="videoGrid">
+          <div class="video-card local-video" id="localVideoCard">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <div class="video-badge">Primary Node (You)</div>
+          </div>
+        </div>
+
+        <div class="live-captions glass-element">
+          <div id="transcriptionStream" class="transcription-stream"></div>
+          <span class="caption-hint">ORBIT STATION MULTI-SPEAKER SYNC</span>
+        </div>
+
+        <div class="call-controls">
+          <button id="toggleMicBtn" class="circle-btn"><i class="fas fa-microphone"></i></button>
+          <button id="endCallBtn" class="circle-btn danger"><i class="fas fa-phone-slash"></i></button>
+          <button id="toggleCamBtn" class="circle-btn"><i class="fas fa-video"></i></button>
+          <button id="focusSpeakerBtn" class="circle-btn"><i class="fas fa-expand-alt"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/index.tsx" type="module"></script>
+  </body>
+</html>

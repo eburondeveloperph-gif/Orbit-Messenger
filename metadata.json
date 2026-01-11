@@ -1,0 +1,8 @@
+{
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "name": "Orbit Messenger",
+  "description": "High-end messenger with live Gemini transcription."
+}
