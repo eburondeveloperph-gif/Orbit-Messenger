@@ -24,23 +24,27 @@
     <div id="splashScreen" class="splash-screen">
       <div class="orbit-logo-container">
         <div class="orbit-ring"></div>
+        <div class="orbit-ring second"></div>
         <div class="orbit-core"></div>
       </div>
       <h1 class="splash-title">ORBIT STATION</h1>
-      <p class="splash-subtitle">Powered by Orbit AI Intelligence</p>
+      <p class="splash-subtitle">ORBIT AI INTELLIGENCE SUITE</p>
     </div>
 
     <!-- Auth Overlay -->
     <div id="authOverlay" class="auth-overlay hidden">
       <div class="auth-card">
-        <div class="auth-logo"><i class="fas fa-satellite"></i></div>
+        <div class="orbit-logo-container small">
+          <div class="orbit-ring"></div>
+          <div class="orbit-core"></div>
+        </div>
         <h2>Station Access</h2>
-        <p>Authenticate with your Orbit ID</p>
+        <p>Log in with your Orbit Enterprise ID</p>
         <div class="auth-inputs">
           <input type="email" id="authEmail" placeholder="Orbit ID (Email)">
           <input type="password" id="authPassword" placeholder="Access Key">
         </div>
-        <button id="authBtn" class="auth-submit">Initialize Connection</button>
+        <button id="authBtn" class="auth-submit">Initialize Station</button>
         <p class="auth-footer">Secured by Gemini Enterprise Sync</p>
       </div>
     </div>
@@ -53,40 +57,43 @@
         <section id="dashboardView" class="view active">
           <header class="app-header">
             <div class="header-left">
-              <p class="greeting-sub">Station Dashboard</p>
-              <h1>Orbit AI</h1>
+              <p class="greeting-sub">Operational Dashboard</p>
+              <h1>Orbit Station</h1>
             </div>
             <div class="header-right">
-              <div id="userInitials" class="avatar-small clickable" style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;cursor:pointer;">..</div>
+              <div id="userInitials" class="avatar-small clickable" title="View Profile">..</div>
             </div>
           </header>
 
           <div class="dash-grid">
             <div class="dash-card premium-card clickable" data-action="start-translation">
-              <div class="card-icon"><i class="fas fa-language"></i></div>
+              <div class="card-glow"></div>
+              <div class="card-icon"><i class="fas fa-wave-square"></i></div>
               <h3>Live Translation</h3>
-              <p>Real-time multi-speaker sync room</p>
+              <p>Initialize real-time multi-speaker sync room</p>
             </div>
             <div class="dash-card premium-card clickable" data-action="join-call">
+              <div class="card-glow"></div>
               <div class="card-icon"><i class="fas fa-video"></i></div>
               <h3>Join Video Sync</h3>
-              <p>Connect with global AI arbiters</p>
+              <p>Establish high-fidelity visual node link</p>
             </div>
             <div class="dash-card premium-card clickable" data-action="open-settings">
-              <div class="card-icon"><i class="fas fa-sliders-h"></i></div>
-              <h3>Intelligence Config</h3>
-              <p>Language and model fine-tuning</p>
+              <div class="card-glow"></div>
+              <div class="card-icon"><i class="fas fa-cog"></i></div>
+              <h3>Station Config</h3>
+              <p>Language, model, and voice fine-tuning</p>
             </div>
           </div>
 
           <div class="status-panel glass-element">
             <div class="status-item">
               <span class="status-dot online"></span>
-              <span class="status-label">Global Node Status: Optimal</span>
+              <span class="status-label">Global Neural Link: Optimal</span>
             </div>
             <div class="status-item">
               <i class="fas fa-microchip"></i>
-              <span class="status-label" id="activeModelLabel">Model: Gemini 2.5 Flash</span>
+              <span class="status-label" id="activeModelLabel">Orbit Core: Gemini 2.5 Flash</span>
             </div>
           </div>
         </section>
@@ -99,12 +106,12 @@
           
           <div class="search-bar">
             <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search decrypted logs">
+            <input type="text" placeholder="Search encrypted logs">
           </div>
 
           <div class="chat-list" id="chatList">
             <div class="chat-item" data-room="Global Hub">
-              <div class="avatar-main" style="background: linear-gradient(135deg, #007AFF, #00C7FF);"><i class="fas fa-globe-americas"></i></div>
+              <div class="avatar-main" style="background: linear-gradient(135deg, var(--primary), #00C7FF);"><i class="fas fa-globe-americas"></i></div>
               <div class="chat-info">
                 <div class="chat-top">
                   <span class="chat-name">Arbiter Core</span>
@@ -125,8 +132,8 @@
             </button>
           </header>
           <div class="search-bar">
-            <i class="fas fa-user-plus"></i>
-            <input type="text" placeholder="Filter active nodes">
+            <i class="fas fa-satellite-dish"></i>
+            <input type="text" placeholder="Filter active arbiter nodes">
           </div>
           <div class="chat-list" id="peopleList">
             <!-- Dynamic Arbiters -->
@@ -135,73 +142,109 @@
 
         <!-- Tab: Settings/Profile -->
         <section id="settingsView" class="view">
-          <header class="app-header"><h1>Intelligence Config</h1></header>
+          <header class="app-header"><h1>Station Config</h1></header>
           
           <div class="profile-card-large glass-element">
              <div class="avatar-edit-wrapper">
-                <div id="profileAvatarLarge" class="avatar-main">JS</div>
-                <div class="avatar-edit-badge"><i class="fas fa-camera"></i></div>
+                <div id="profileAvatarLarge" class="avatar-main">..</div>
+                <div class="avatar-edit-badge"><i class="fas fa-pen"></i></div>
              </div>
              <h2 id="profileDisplayName">Arbiter Node</h2>
-             <p id="profileEmailLabel">email@example.com</p>
-             <div id="profileStatusBadge">Online</div>
+             <p id="profileEmailLabel">node@orbit.ai</p>
+             <div id="profileStatusBadge">Operational</div>
           </div>
 
           <div class="settings-section">
-            <h3>Identity Settings</h3>
+            <h3>Identity Core</h3>
             <div class="settings-list">
               <div class="settings-item-col">
                 <span>Display Name</span>
-                <input type="text" id="displayNameInput" placeholder="Enter name">
+                <input type="text" id="displayNameInput" placeholder="Enter node name">
               </div>
               <div class="settings-item-col">
-                <span>Arbiter Status</span>
-                <input type="text" id="statusInput" placeholder="Status description">
+                <span>Station Status</span>
+                <input type="text" id="statusInput" placeholder="Current operational status">
               </div>
               <div class="settings-item" id="saveProfileBtn">
-                <span>Synchronize Profile</span>
+                <span>Update Station Identity</span>
               </div>
             </div>
           </div>
 
           <div class="settings-section">
-            <h3>Orbit AI Core</h3>
+            <h3>Orbit AI Intelligence</h3>
             <div class="settings-list">
               <div class="settings-item-col">
-                <span>Active LLM Model</span>
+                <span>Core LLM Model</span>
                 <select id="llmModelSelect" class="premium-select">
-                  <option value="gemini-2.5-flash-native-audio-preview-12-2025">Gemini 2.5 Flash (Sync Optimized)</option>
-                  <option value="gemini-3-pro-preview">Gemini 3 Pro (Reasoning Enhanced)</option>
-                  <option value="gemini-3-flash-preview">Gemini 3 Flash (Real-time Low Latency)</option>
+                  <option value="gemini-2.5-flash-native-audio-preview-12-2025">Orbit-Flash (Native Audio 2.5)</option>
+                  <option value="gemini-3-pro-preview">Orbit-Pro (Reasoning 3.0)</option>
+                  <option value="gemini-3-flash-preview">Orbit-Lite (High Speed 3.0)</option>
                 </select>
               </div>
+              
               <div class="settings-item">
-                <div class="settings-icon"><i class="fas fa-microchip"></i></div>
+                <div class="settings-icon"><i class="fas fa-globe"></i></div>
                 <span style="flex:1; font-weight:600;">Real-time Transcription</span>
+                <label class="switch">
+                  <input type="checkbox" id="transcriptionToggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="settings-item">
+                <div class="settings-icon"><i class="fas fa-language"></i></div>
+                <span style="flex:1; font-weight:600;">Automated Translation</span>
                 <label class="switch">
                   <input type="checkbox" id="translationToggle">
                   <span class="slider"></span>
                 </label>
               </div>
+
+              <div id="translationOptions" class="hidden">
+                <div class="settings-item-col">
+                  <span>Source Language (Speech)</span>
+                  <select id="sourceLangSelect" class="premium-select">
+                    <option value="Auto-detect">Auto-detect Node</option>
+                    <option value="English">English</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="French">French</option>
+                    <option value="German">German</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Japanese">Japanese</option>
+                  </select>
+                </div>
+                <div class="settings-item-col">
+                  <span>Target Translation Node</span>
+                  <select id="targetLangSelect" class="premium-select">
+                    <option value="English">English (Orbit US)</option>
+                    <option value="Spanish">Spanish (Orbit ES)</option>
+                    <option value="French">French (Orbit FR)</option>
+                    <option value="German">German (Orbit DE)</option>
+                    <option value="Chinese">Chinese (Orbit CN)</option>
+                    <option value="Japanese">Japanese (Orbit JP)</option>
+                  </select>
+                </div>
+              </div>
+
               <div class="settings-item-col">
-                <span>Target Language Node</span>
-                <select id="targetLangSelect" class="premium-select">
-                  <option value="English">English (US)</option>
-                  <option value="Spanish">Spanish (ES)</option>
-                  <option value="French">French (FR)</option>
-                  <option value="German">German (DE)</option>
-                  <option value="Chinese">Chinese (CN)</option>
-                  <option value="Japanese">Japanese (JP)</option>
+                <span>Synthesized Voice Node</span>
+                <select id="voiceSelect" class="premium-select">
+                  <option value="Zephyr">Zephyr (Balanced)</option>
+                  <option value="Puck">Puck (Fast-Paced)</option>
+                  <option value="Charon">Charon (Deep/Calm)</option>
+                  <option value="Kore">Kore (Bright/Professional)</option>
+                  <option value="Fenrir">Fenrir (Authoritative)</option>
                 </select>
               </div>
             </div>
           </div>
 
           <div class="settings-section">
-            <h3>Visual Interface</h3>
+            <h3>Station Interface</h3>
             <div class="settings-list">
               <div class="settings-item-col">
-                <span>Station Accent Color</span>
+                <span>Branding Accent</span>
                 <div class="color-picker" id="colorPicker">
                   <div class="color-swatch active" style="background:#007AFF" data-color="#007AFF"></div>
                   <div class="color-swatch" style="background:#FF2D55" data-color="#FF2D55"></div>
@@ -210,8 +253,8 @@
                 </div>
               </div>
               <div class="settings-item" id="logoutBtn" style="color:var(--danger)">
-                <div class="settings-icon" style="background:rgba(255,59,48,0.1); color:var(--danger)"><i class="fas fa-power-off"></i></div>
-                <span style="font-weight:700;">Disconnect Station</span>
+                <div class="settings-icon" style="background:rgba(239,68,68,0.1); color:var(--danger)"><i class="fas fa-sign-out-alt"></i></div>
+                <span style="font-weight:700;">Deactivate Station Link</span>
               </div>
             </div>
           </div>
@@ -221,14 +264,14 @@
         <div id="chatDetail" class="chat-detail-pane hidden">
           <header class="messenger-header glass-element">
             <button id="backToChats">
-              <i class="fas fa-chevron-left"></i>
-              <span>Back</span>
+              <i class="fas fa-arrow-left"></i>
+              <span>Dashboard</span>
             </button>
             <div class="active-chat-info">
-              <h2 id="roomTitle">Sync Hub</h2>
-              <span id="roomStatus">● Active Connection</span>
+              <h2 id="roomTitle">Neural Hub</h2>
+              <span id="roomStatus">● Orbit Link Active</span>
             </div>
-            <button id="startCallBtn" class="premium-call-btn">
+            <button id="startCallBtn" class="premium-call-btn" title="Sync Video">
               <i class="fas fa-video"></i>
             </button>
           </header>
@@ -237,12 +280,12 @@
 
           <footer class="message-input-area glass-element">
             <div class="input-wrapper">
-              <input type="text" id="msgInput" placeholder="Transmit secure packets..." autocomplete="off">
-              <button id="seamlessTranscriptionBtn" class="icon-btn-mic">
+              <input type="text" id="msgInput" placeholder="Enter encrypted packet..." autocomplete="off">
+              <button id="seamlessTranscriptionBtn" class="icon-btn-mic" title="Voice Input">
                 <i class="fas fa-microphone"></i>
               </button>
               <button id="sendMsgBtn" class="premium-call-btn" style="width:36px; height:36px; font-size:14px;">
-                <i class="fas fa-arrow-up"></i>
+                <i class="fas fa-paper-plane"></i>
               </button>
             </div>
           </footer>
@@ -252,39 +295,39 @@
       <!-- Bottom Navigation Bar -->
       <nav class="bottom-nav">
         <button class="nav-item active" data-view="dashboardView">
-          <i class="fas fa-th-large"></i>
-          <span>Home</span>
+          <i class="fas fa-satellite"></i>
+          <span>Station</span>
         </button>
         <button class="nav-item" data-view="chatsView">
-          <i class="fas fa-vault"></i>
+          <i class="fas fa-history"></i>
           <span>Archives</span>
         </button>
         <button class="nav-item" data-view="peopleView">
-          <i class="fas fa-user-group"></i>
+          <i class="fas fa-network-wired"></i>
           <span>Nodes</span>
         </button>
         <button class="nav-item" data-view="settingsView">
-          <i class="fas fa-user-circle"></i>
-          <span>Profile</span>
+          <i class="fas fa-fingerprint"></i>
+          <span>Config</span>
         </button>
       </nav>
 
       <!-- Video Call Overlay -->
       <div id="callOverlay" class="call-overlay hidden">
         <div class="call-header glass-element">
-          <span id="callParticipants">Connecting Nodes...</span>
+          <span id="callParticipants">Initializing Neural Link...</span>
         </div>
         
         <div class="video-grid" id="videoGrid">
           <div class="video-card local-video" id="localVideoCard">
             <video id="localVideo" autoplay muted playsinline></video>
-            <div class="video-badge">Primary Node (You)</div>
+            <div class="video-badge">Arbiter-01 (You)</div>
           </div>
         </div>
 
         <div class="live-captions glass-element">
           <div id="transcriptionStream" class="transcription-stream"></div>
-          <span class="caption-hint">ORBIT STATION MULTI-SPEAKER SYNC</span>
+          <span class="caption-hint">ORBIT AI MULTI-NODE TRANSCRIPTION ENGINE</span>
         </div>
 
         <div class="call-controls">

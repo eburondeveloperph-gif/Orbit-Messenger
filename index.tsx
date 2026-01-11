@@ -26,6 +26,7 @@ class OrbitStation {
   private ai: GoogleGenAI;
   private currentModel = 'gemini-2.5-flash-native-audio-preview-12-2025';
   private translationModel = 'gemini-3-flash-preview';
+  private currentVoice = 'Zephyr';
   
   private liveSession: any = null;
   private seamlessSession: any = null;
@@ -35,6 +36,7 @@ class OrbitStation {
   private isMuted = false;
   private isCamOff = false;
   private isAutoTranslateEnabled = false;
+  private isTranscriptionEnabled = true;
   private currentUser: any = null;
   
   private userProfile: UserProfile = {
@@ -43,6 +45,7 @@ class OrbitStation {
     avatarColor: "#007AFF"
   };
   
+  private sourceLanguage = "Auto-detect";
   private targetLanguage = "English";
   private selectedArbiters: Set<string> = new Set();
   private syncRoomChannel: any = null;
@@ -89,9 +92,13 @@ class OrbitStation {
   private statusInput = document.getElementById('statusInput') as HTMLInputElement;
   private saveProfileBtn = document.getElementById('saveProfileBtn') as HTMLDivElement;
   private llmModelSelect = document.getElementById('llmModelSelect') as HTMLSelectElement;
+  private voiceSelect = document.getElementById('voiceSelect') as HTMLSelectElement;
 
   // Settings
+  private transcriptionToggle = document.getElementById('transcriptionToggle') as HTMLInputElement;
   private translationToggle = document.getElementById('translationToggle') as HTMLInputElement;
+  private translationOptions = document.getElementById('translationOptions') as HTMLDivElement;
+  private sourceLangSelect = document.getElementById('sourceLangSelect') as HTMLSelectElement;
   private targetLangSelect = document.getElementById('targetLangSelect') as HTMLSelectElement;
   private colorSwatches = document.querySelectorAll('.color-swatch');
 
@@ -108,9 +115,13 @@ class OrbitStation {
       this.splashScreen.style.opacity = '0';
       setTimeout(() => {
         this.splashScreen.classList.add('hidden');
-        if (!this.currentUser) this.authOverlay.classList.remove('hidden');
-      }, 1000);
-    }, 3000);
+        this.splashScreen.style.visibility = 'hidden';
+        if (!this.currentUser) {
+            this.authOverlay.classList.remove('hidden');
+            this.authOverlay.style.animation = 'viewEntry 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        }
+      }, 1200);
+    }, 3500);
   }
 
   private async checkAuth() {
@@ -127,8 +138,7 @@ class OrbitStation {
       item.addEventListener('click', () => {
         const viewId = item.getAttribute('data-view');
         this.switchView(viewId!);
-        this.navItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
+        this.updateNavActive(viewId!);
       });
     });
 
@@ -139,6 +149,10 @@ class OrbitStation {
           case 'start-translation':
             this.switchView('chatsView');
             this.updateNavActive('chatsView');
+            setTimeout(() => {
+                const globalHub = document.querySelector('[data-room="Global Hub"]') as HTMLElement;
+                globalHub?.click();
+            }, 100);
             break;
           case 'join-call':
             this.switchView('peopleView');
@@ -159,6 +173,10 @@ class OrbitStation {
 
     this.backToChats.addEventListener('click', () => {
       this.chatDetail.classList.add('hidden');
+      setTimeout(() => {
+          this.switchView('dashboardView');
+          this.updateNavActive('dashboardView');
+      }, 300);
     });
 
     this.sendMsgBtn.addEventListener('click', () => this.sendMessage());
@@ -168,16 +186,37 @@ class OrbitStation {
     this.endCallBtn.addEventListener('click', () => this.endCall());
     this.focusSpeakerBtn.addEventListener('click', () => this.toggleFocusMode());
 
-    this.translationToggle.addEventListener('change', (e) => this.isAutoTranslateEnabled = (e.target as HTMLInputElement).checked);
-    this.targetLangSelect.addEventListener('change', (e) => {
-      this.targetLanguage = (e.target as HTMLSelectElement).value;
-      localStorage.setItem('targetLanguage', this.targetLanguage);
+    // Settings logic
+    this.transcriptionToggle?.addEventListener('change', (e) => {
+        this.isTranscriptionEnabled = (e.target as HTMLInputElement).checked;
+        localStorage.setItem('orbit_transcription_enabled', String(this.isTranscriptionEnabled));
     });
 
-    this.llmModelSelect.addEventListener('change', (e) => {
+    this.translationToggle?.addEventListener('change', (e) => {
+      this.isAutoTranslateEnabled = (e.target as HTMLInputElement).checked;
+      this.translationOptions.classList.toggle('hidden', !this.isAutoTranslateEnabled);
+      localStorage.setItem('orbit_translation_enabled', String(this.isAutoTranslateEnabled));
+    });
+
+    this.sourceLangSelect?.addEventListener('change', (e) => {
+      this.sourceLanguage = (e.target as HTMLSelectElement).value;
+      localStorage.setItem('orbit_source_lang', this.sourceLanguage);
+    });
+
+    this.targetLangSelect?.addEventListener('change', (e) => {
+      this.targetLanguage = (e.target as HTMLSelectElement).value;
+      localStorage.setItem('orbit_target_lang', this.targetLanguage);
+    });
+
+    this.llmModelSelect?.addEventListener('change', (e) => {
       this.currentModel = (e.target as HTMLSelectElement).value;
-      this.activeModelLabel.textContent = `Model: ${this.currentModel.split('-')[1]} ${this.currentModel.split('-')[2] || ''}`;
+      this.updateModelLabel();
       localStorage.setItem('orbit_active_model', this.currentModel);
+    });
+
+    this.voiceSelect?.addEventListener('change', (e) => {
+      this.currentVoice = (e.target as HTMLSelectElement).value;
+      localStorage.setItem('orbit_active_voice', this.currentVoice);
     });
 
     this.colorSwatches.forEach(swatch => {
@@ -187,7 +226,7 @@ class OrbitStation {
       });
     });
 
-    this.saveProfileBtn.addEventListener('click', () => this.updateProfile());
+    this.saveProfileBtn?.addEventListener('click', () => this.updateProfile());
 
     document.getElementById('logoutBtn')?.addEventListener('click', () => this.handleLogout());
     document.getElementById('toggleMicBtn')?.addEventListener('click', (e) => this.toggleMic(e.currentTarget as HTMLButtonElement));
@@ -195,10 +234,18 @@ class OrbitStation {
     document.getElementById('seamlessTranscriptionBtn')?.addEventListener('click', () => this.toggleSeamlessTranscription());
 
     document.querySelector('[data-room="Global Hub"]')?.addEventListener('click', () => {
-        document.getElementById('roomTitle')!.textContent = "Global Hub";
+        document.getElementById('roomTitle')!.textContent = "Neural Hub Alpha";
         this.chatDetail.classList.remove('hidden');
         this.loadMessages();
     });
+  }
+
+  private updateModelLabel() {
+    if (!this.activeModelLabel) return;
+    const modelParts = this.currentModel.split('-');
+    const mainName = modelParts[1];
+    const subName = modelParts[2] || '';
+    this.activeModelLabel.textContent = `Orbit Core: ${mainName.charAt(0).toUpperCase() + mainName.slice(1)} ${subName.toUpperCase()}`;
   }
 
   private updateNavActive(viewId: string) {
@@ -208,9 +255,12 @@ class OrbitStation {
   }
 
   private async handleAuth() {
-    const email = (document.getElementById('authEmail') as HTMLInputElement).value;
-    const password = (document.getElementById('authPassword') as HTMLInputElement).value;
-    if (!email || !password) return alert("Station access denied. Credentials required.");
+    const emailInput = document.getElementById('authEmail') as HTMLInputElement;
+    const passInput = document.getElementById('authPassword') as HTMLInputElement;
+    const email = emailInput?.value;
+    const password = passInput?.value;
+    
+    if (!email || !password) return alert("Station access denied. Operational credentials required.");
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
@@ -226,7 +276,8 @@ class OrbitStation {
     this.currentUser = user;
     this.authOverlay.classList.add('hidden');
     this.appShell.classList.remove('hidden');
-    this.profileEmailLabel.textContent = user.email || "node@orbit.ai";
+    
+    if (this.profileEmailLabel) this.profileEmailLabel.textContent = user.email || "node@orbit.ai";
     
     const savedProfile = localStorage.getItem(`profile_${user.id}`);
     if (savedProfile) {
@@ -243,68 +294,78 @@ class OrbitStation {
 
   private applyProfileUI() {
     const initials = this.userProfile.displayName.slice(0, 2).toUpperCase();
-    this.userInitials.textContent = initials;
-    this.userInitials.style.background = this.userProfile.avatarColor;
+    if (this.userInitials) {
+        this.userInitials.textContent = initials;
+        this.userInitials.style.background = `linear-gradient(135deg, ${this.userProfile.avatarColor}, #111a33)`;
+    }
     
-    this.profileAvatarLarge.textContent = initials;
-    this.profileAvatarLarge.style.background = this.userProfile.avatarColor;
-    this.profileDisplayNameLabel.textContent = this.userProfile.displayName;
-    this.profileStatusBadge.textContent = this.userProfile.status;
+    if (this.profileAvatarLarge) {
+        this.profileAvatarLarge.textContent = initials;
+        this.profileAvatarLarge.style.background = this.userProfile.avatarColor;
+    }
+    if (this.profileDisplayNameLabel) this.profileDisplayNameLabel.textContent = this.userProfile.displayName;
+    if (this.profileStatusBadge) this.profileStatusBadge.textContent = this.userProfile.status;
     
-    this.displayNameInput.value = this.userProfile.displayName;
-    this.statusInput.value = this.userProfile.status;
+    if (this.displayNameInput) this.displayNameInput.value = this.userProfile.displayName;
+    if (this.statusInput) this.statusInput.value = this.userProfile.status;
   }
 
   private updateProfile() {
-    this.userProfile.displayName = this.displayNameInput.value || "Arbiter Node";
-    this.userProfile.status = this.statusInput.value || "Online";
+    this.userProfile.displayName = this.displayNameInput?.value || "Arbiter Node";
+    this.userProfile.status = this.statusInput?.value || "Station Online";
     this.userProfile.avatarColor = localStorage.getItem('accentColor') || "#007AFF";
     
     localStorage.setItem(`profile_${this.currentUser.id}`, JSON.stringify(this.userProfile));
     this.applyProfileUI();
     
-    this.saveProfileBtn.style.background = "var(--success)";
-    this.saveProfileBtn.textContent = "STATION SYNCHRONIZED";
-    setTimeout(() => {
-       this.saveProfileBtn.style.background = "var(--primary)";
-       this.saveProfileBtn.textContent = "Synchronize Profile";
-    }, 2000);
+    if (this.saveProfileBtn) {
+        this.saveProfileBtn.style.background = "var(--success)";
+        this.saveProfileBtn.textContent = "STATION SYNCHRONIZED";
+        setTimeout(() => {
+           this.saveProfileBtn.style.background = "var(--primary)";
+           this.saveProfileBtn.textContent = "Update Station Identity";
+        }, 2000);
+    }
   }
 
   private async loadArbiters() {
     const arbiters = [
-      { id: 'alpha', name: "Node Alpha", status: "Available", color: "#FF2D55" },
-      { id: 'beta', name: "Node Beta", status: "Streaming", color: "#007AFF" },
-      { id: 'gamma', name: "Node Gamma", status: "Active", color: "#AF52DE" }
+      { id: 'alpha', name: "Node Alpha", status: "Operational", color: "#FF2D55" },
+      { id: 'beta', name: "Node Beta", status: "Transmitting", color: "#007AFF" },
+      { id: 'gamma', name: "Node Gamma", status: "Linked", color: "#AF52DE" },
+      { id: 'delta', name: "Node Delta", status: "Idle", color: "#34C759" }
     ];
     
-    this.peopleList.innerHTML = arbiters.map(a => `
-      <div class="chat-item" data-id="${a.id}">
-        <div class="avatar-main" style="background:${a.color}; border-radius: 18px;">${a.name[5]}</div>
-        <div class="chat-info">
-          <span class="chat-name">${a.name}</span>
-          <span class="last-msg">${a.status}</span>
-        </div>
-      </div>
-    `).join('');
+    if (this.peopleList) {
+        this.peopleList.innerHTML = arbiters.map(a => `
+          <div class="chat-item clickable" data-id="${a.id}">
+            <div class="avatar-main" style="background:${a.color}; border-radius: 14px;">${a.name.split(' ')[1][0]}</div>
+            <div class="chat-info">
+              <span class="chat-name">${a.name}</span>
+              <span class="last-msg">${a.status}</span>
+            </div>
+          </div>
+        `).join('');
 
-    this.peopleList.querySelectorAll('.chat-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const id = item.getAttribute('data-id')!;
-        if (this.selectedArbiters.has(id)) {
-          this.selectedArbiters.delete(id);
-          item.classList.remove('selected');
-        } else {
-          this.selectedArbiters.add(id);
-          item.classList.add('selected');
-        }
-        this.initGroupCallBtn.classList.toggle('hidden', this.selectedArbiters.size === 0);
-      });
-    });
+        this.peopleList.querySelectorAll('.chat-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const id = item.getAttribute('data-id')!;
+            if (this.selectedArbiters.has(id)) {
+              this.selectedArbiters.delete(id);
+              item.classList.remove('selected');
+            } else {
+              this.selectedArbiters.add(id);
+              item.classList.add('selected');
+            }
+            if (this.initGroupCallBtn) this.initGroupCallBtn.classList.toggle('hidden', this.selectedArbiters.size === 0);
+          });
+        });
+    }
   }
 
   private async loadMessages() {
-    this.messageContainer.innerHTML = '<p style="text-align:center; font-size:12px; color:var(--text-dim); margin-bottom:20px;">STATION ARCHIVE ACCESSED</p>';
+    if (!this.messageContainer) return;
+    this.messageContainer.innerHTML = '<p style="text-align:center; font-size:12px; color:var(--text-dim); margin:20px 0; opacity:0.4;">ORBIT STATION ARCHIVE ACCESS SECURE</p>';
     const { data } = await supabase.from('messages').select('*').order('created_at', { ascending: true }).limit(20);
     if (data) data.forEach(m => this.addMessageToUI(m.content, m.sender_id === this.currentUser.id ? 'sent' : 'received'));
   }
@@ -312,15 +373,17 @@ class OrbitStation {
   private async loadCallHistory() {
     const { data } = await supabase.from('call_records').select('*').order('created_at', { ascending: false });
     const container = document.getElementById('callHistory')!;
-    container.innerHTML = data?.map(c => `
-      <div class="chat-item">
-        <div class="avatar-main" style="background:var(--surface); color:var(--text-dim); border-radius: 14px;"><i class="fas fa-file-shield"></i></div>
-        <div class="chat-info">
-          <span class="chat-name">${c.room}</span>
-          <span class="last-msg">${new Date(c.created_at).toLocaleString()}</span>
-        </div>
-      </div>
-    `).join('') || '<p style="padding:40px; text-align:center; opacity:0.4; font-size:14px;">Archive empty.</p>';
+    if (container) {
+        container.innerHTML = data?.map(c => `
+          <div class="chat-item">
+            <div class="avatar-main" style="background:var(--surface); color:var(--text-dim); border-radius: 12px;"><i class="fas fa-satellite"></i></div>
+            <div class="chat-info">
+              <span class="chat-name">${c.room}</span>
+              <span class="last-msg">Archived ${new Date(c.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+        `).join('') || '<p style="padding:60px; text-align:center; opacity:0.3; font-size:15px; font-weight:700;">No archived neural syncs found.</p>';
+    }
   }
 
   private async handleLogout() {
@@ -355,6 +418,7 @@ class OrbitStation {
   }
 
   private renderTranscription(msg: TranscriptionMessage) {
+    if (!this.transcriptionStream) return;
     const { userId, userName, userColor, text, translatedText } = msg;
     this.highlightSpeaker(userId);
     
@@ -369,7 +433,7 @@ class OrbitStation {
       targetLine.setAttribute('data-speaker-id', userId);
       targetLine.style.setProperty('--line-color', userColor);
       targetLine.innerHTML = `
-        <span class="transcript-speaker">${userName}</span>
+        <span class="transcript-speaker" style="background:${userColor}">${userName}</span>
         <div class="transcript-content"></div>
         <div class="transcript-translated"></div>
       `;
@@ -397,8 +461,8 @@ class OrbitStation {
     }
     this.activeSpeakerId = speakerId;
     if (speakerId === this.currentUser.id) {
-       this.localVideoCard.classList.add('speaking');
-       if (this.isFocusMode) this.applyFocus(this.localVideoCard);
+       this.localVideoCard?.classList.add('speaking');
+       if (this.isFocusMode && this.localVideoCard) this.applyFocus(this.localVideoCard);
     } else {
        const remoteCard = document.querySelector(`.video-card[data-arbiter-id="${speakerId}"]`) as HTMLElement;
        if (remoteCard) {
@@ -410,12 +474,12 @@ class OrbitStation {
     this.speakerHandoffTimeout = setTimeout(() => {
       this.clearSpeakerHighlight(speakerId);
       this.activeSpeakerId = null;
-    }, 3000);
+    }, 4000);
   }
 
   private clearSpeakerHighlight(speakerId: string) {
     if (speakerId === this.currentUser.id) {
-       this.localVideoCard.classList.remove('speaking');
+       this.localVideoCard?.classList.remove('speaking');
     } else {
        const remoteCard = document.querySelector(`.video-card[data-arbiter-id="${speakerId}"]`);
        if (remoteCard) remoteCard.classList.remove('speaking');
@@ -429,7 +493,7 @@ class OrbitStation {
 
   private toggleFocusMode() {
     this.isFocusMode = !this.isFocusMode;
-    this.focusSpeakerBtn.classList.toggle('active', this.isFocusMode);
+    if (this.focusSpeakerBtn) this.focusSpeakerBtn.classList.toggle('active', this.isFocusMode);
     if (!this.isFocusMode) {
       document.querySelectorAll('.video-card').forEach(card => card.classList.remove('focused'));
     } else if (this.activeSpeakerId) {
@@ -440,13 +504,13 @@ class OrbitStation {
   private async startCall(isGroup = false) {
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      this.localVideo.srcObject = this.localStream;
-      this.callOverlay.classList.remove('hidden');
+      if (this.localVideo) this.localVideo.srcObject = this.localStream;
+      if (this.callOverlay) this.callOverlay.classList.remove('hidden');
       const roomId = isGroup ? `group-${Date.now()}` : `direct-${this.currentUser.id}`;
       this.joinSyncRoom(roomId);
-      this.callParticipantsLabel.textContent = isGroup ? `${this.selectedArbiters.size + 1} Nodes Syncing` : `Direct Peer Link`;
+      if (this.callParticipantsLabel) this.callParticipantsLabel.textContent = isGroup ? `${this.selectedArbiters.size + 1} Nodes Synchronized` : `Direct Peer Neural Link`;
       await this.initGeminiSync();
-    } catch (e) { alert("Visual sync failed: Camera access denied."); }
+    } catch (e) { alert("Visual node sync failed: Camera permissions required."); }
   }
 
   private async initGeminiSync() {
@@ -455,13 +519,14 @@ class OrbitStation {
       model: this.currentModel,
       config: { 
         responseModalities: [Modality.AUDIO], 
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: this.currentVoice } } },
         inputAudioTranscription: {},
         outputAudioTranscription: {} 
       },
       callbacks: {
         onopen: () => this.streamAudio(sessionPromise),
         onmessage: async (msg: LiveServerMessage) => {
-          if (msg.serverContent?.inputTranscription) {
+          if (msg.serverContent?.inputTranscription && this.isTranscriptionEnabled) {
             const text = msg.serverContent.inputTranscription.text;
             let trans = "";
             if (this.isAutoTranslateEnabled) {
@@ -469,7 +534,7 @@ class OrbitStation {
             }
             this.renderTranscription({
               userId: this.currentUser.id,
-              userName: this.userProfile.displayName || "You",
+              userName: this.userProfile.displayName || "Arbiter Node",
               userColor: this.userProfile.avatarColor,
               text,
               translatedText: trans,
@@ -501,27 +566,28 @@ class OrbitStation {
 
   private async translateText(text: string, target: string) {
     try {
+      const sourceInfo = this.sourceLanguage !== 'Auto-detect' ? `from ${this.sourceLanguage} ` : '';
       const res = await this.ai.models.generateContent({ 
         model: this.translationModel, 
-        contents: `Translate to ${target}, output only the text: "${text}"` 
+        contents: `Arbiter AI Context: Translate ${sourceInfo}strictly to ${target}, output only the pure text: "${text}"` 
       });
       return res.text || "";
     } catch (e) { return ""; }
   }
 
   private async endCall() {
-    this.callOverlay.classList.add('hidden');
+    this.callOverlay?.classList.add('hidden');
     this.localStream?.getTracks().forEach(t => t.stop());
     this.liveSession?.close();
     this.audioContext?.close();
-    this.transcriptionStream.innerHTML = "";
+    if (this.transcriptionStream) this.transcriptionStream.innerHTML = "";
   }
 
   private async sendMessage() {
-    const text = this.msgInput.value.trim();
+    const text = this.msgInput?.value.trim();
     if (!text) return;
     this.addMessageToUI(text, 'sent');
-    this.msgInput.value = '';
+    if (this.msgInput) this.msgInput.value = '';
     await supabase.from('messages').insert([{ content: text, sender_id: this.currentUser.id }]);
   }
 
@@ -537,11 +603,17 @@ class OrbitStation {
       this.audioContext = new AudioContext({ sampleRate: 16000 });
       const promise = this.ai.live.connect({
         model: this.currentModel,
-        config: { responseModalities: [Modality.AUDIO], inputAudioTranscription: {} },
+        config: { 
+          responseModalities: [Modality.AUDIO], 
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: this.currentVoice } } },
+          inputAudioTranscription: {} 
+        },
         callbacks: {
           onopen: () => this.streamAudio(promise),
           onmessage: (msg: LiveServerMessage) => {
-            if (msg.serverContent?.inputTranscription) this.msgInput.value += msg.serverContent.inputTranscription.text + " ";
+            if (msg.serverContent?.inputTranscription && this.msgInput) {
+                this.msgInput.value += msg.serverContent.inputTranscription.text + " ";
+            }
           }
         }
       });
@@ -550,7 +622,9 @@ class OrbitStation {
   }
 
   private switchView(id: string) {
-    this.views.forEach(v => v.classList.toggle('active', v.id === id));
+    this.views.forEach(v => {
+        v.classList.toggle('active', v.id === id);
+    });
     this.chatDetail.classList.add('hidden');
   }
 
@@ -567,25 +641,52 @@ class OrbitStation {
   private loadPersonalization() {
     const accent = localStorage.getItem('accentColor');
     if (accent) this.setAccentColor(accent);
-    const lang = localStorage.getItem('targetLanguage');
-    if (lang) {
+
+    const lang = localStorage.getItem('orbit_target_lang');
+    if (lang && this.targetLangSelect) {
       this.targetLanguage = lang;
       this.targetLangSelect.value = lang;
     }
+
+    const srcLang = localStorage.getItem('orbit_source_lang');
+    if (srcLang && this.sourceLangSelect) {
+        this.sourceLanguage = srcLang;
+        this.sourceLangSelect.value = srcLang;
+    }
+
+    const transEnabled = localStorage.getItem('orbit_translation_enabled') === 'true';
+    this.isAutoTranslateEnabled = transEnabled;
+    if (this.translationToggle) this.translationToggle.checked = transEnabled;
+    if (this.translationOptions) this.translationOptions.classList.toggle('hidden', !transEnabled);
+
+    const transcriptionEnabled = localStorage.getItem('orbit_transcription_enabled') !== 'false';
+    this.isTranscriptionEnabled = transcriptionEnabled;
+    if (this.transcriptionToggle) this.transcriptionToggle.checked = transcriptionEnabled;
+
     const model = localStorage.getItem('orbit_active_model');
-    if (model) {
+    if (model && this.llmModelSelect) {
       this.currentModel = model;
       this.llmModelSelect.value = model;
-      this.activeModelLabel.textContent = `Model: ${model.split('-')[1]} ${model.split('-')[2] || ''}`;
+      this.updateModelLabel();
+    }
+
+    const voice = localStorage.getItem('orbit_active_voice');
+    if (voice && this.voiceSelect) {
+      this.currentVoice = voice;
+      this.voiceSelect.value = voice;
     }
   }
 
   private addMessageToUI(text: string, type: string) {
+    if (!this.messageContainer) return;
     const div = document.createElement('div');
     div.className = `message ${type}`;
     div.innerHTML = `<div class="msg-bubble">${text}</div>`;
     this.messageContainer.appendChild(div);
-    this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+    this.messageContainer.scrollTo({
+        top: this.messageContainer.scrollHeight,
+        behavior: 'smooth'
+    });
   }
 
   private toggleMic(btn: HTMLButtonElement) {
